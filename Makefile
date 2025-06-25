@@ -1,0 +1,10 @@
+requirements:
+	pip install -r requirements.txt
+
+
+requirements_dev:
+	pip install -r requirements_dev.txt
+
+
+format:
+	ruff format ; ruff check --fix src
