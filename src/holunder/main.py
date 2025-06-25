@@ -4,6 +4,7 @@ from holunder.config import Config
 from holunder.gdrive.client import GDriveClient
 from holunder.logger import logger
 from holunder.sync.local_folder import sync_local_dir
+from holunder.sync.remote_sheet import sync_gsheet
 
 
 def check_config(config_path: Path | str) -> None:
@@ -23,7 +24,9 @@ def check_config(config_path: Path | str) -> None:
     sheet = client.get_management_spreadsheet()
     logger.info(f"Configured management spreadsheet: '{sheet.name}' ({sheet.id}).")
 
-    sync_local_dir('synced', client)
+    docs = sync_local_dir('synced', client)
+    sync_gsheet(client, docs)
+
 
 
 if __name__ == '__main__':

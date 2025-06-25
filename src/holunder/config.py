@@ -6,11 +6,15 @@ from yaml import CSafeLoader, load
 
 
 class Config(BaseModel):
+    class Spreadsheet(BaseModel):
+        id: str
+        sheet: str
+
     service_account_key_path: Path = Field(description='Path to Google Service Account Key file')
     gdrive_root_folder_id: str = Field(
         description='ID of the root folder containing all the GDoc files'
     )
-    gdrive_management_sheet_id: str | None = Field(
+    gdrive_management_spreadsheet: Spreadsheet | None = Field(
         description='ID of the GSheet to use for pages approval'
     )
     ignore_images: bool = Field(

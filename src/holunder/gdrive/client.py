@@ -1,5 +1,6 @@
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import Resource, build
+from gsheet_pandas import DriveConnection
 
 from holunder.gdrive.constants import GDriveMimeType
 from holunder.gdrive.models import FileGetResponse, FileNode
@@ -82,7 +83,7 @@ class GDriveClient:
         return root
 
     def get_management_spreadsheet(self) -> FileGetResponse:
-        file_id = self._config.gdrive_management_sheet_id
+        file_id = self._config.gdrive_management_spreadsheet.id
         sheet = self.get_file_info(file_id)
         if sheet.mimeType != GDriveMimeType.sheet:
             raise ValueError(
@@ -98,3 +99,8 @@ class GDriveClient:
         if self._config.ignore_images:
             return bytes
         raise NotImplementedError()
+
+    def get_gsheet_pandas_client(self) -> DriveConnection:
+        return DriveConnection(
+            credentials_dir=self._config.service_account_key_path, token_dir=None
+        )
