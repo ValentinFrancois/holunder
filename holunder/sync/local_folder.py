@@ -1,11 +1,11 @@
 import re
 import subprocess
 from collections import defaultdict
+from collections.abc import Callable
 from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Callable
 
 from tqdm import tqdm
 

@@ -27,7 +27,7 @@ def update_spreadsheet_from_df(client: GDriveClient, df: pd.DataFrame) -> None:
     df = df.fillna("")
 
     def clean(value: Any) -> Any:
-        if isinstance(value, (str, int, float, bool)):
+        if isinstance(value, str | int | float | bool):
             return value
         else:
             return str(value)
