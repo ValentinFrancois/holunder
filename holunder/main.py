@@ -71,10 +71,7 @@ def check_config(**kwargs):
         logger.info("No management spreadsheet configured.")
 
 
-@add_config_params
-@cli.command("sync_gdrive")
-def sync_gdrive(**kwargs):
-    config = Config(**kwargs)
+def sync_gdrive(config: Config) -> None:
     client = _get_client(config)
     docs = client.list_google_docs()
     check_for_duplicates(docs)
@@ -91,6 +88,13 @@ def sync_gdrive(**kwargs):
         docs=docs,
         download_only_ids=approved_ids,
     )
+
+
+@add_config_params
+@cli.command("sync_gdrive")
+def cli_sync_gdrive(**kwargs):
+    config = Config(**kwargs)
+    sync_gdrive(config)
 
 
 if __name__ == "__main__":

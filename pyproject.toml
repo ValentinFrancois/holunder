@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "holunder"
+dynamic = ["version"]
+authors = [
+  {name = "Valentin François"},
+]
+readme = "README.md"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE.txt"]
+requires-python = ">= 3.10"
+dependencies = [
+    "google-auth",
+    "google-api-python-client",
+    "pydantic",
+    "Unidecode",
+    "tqdm",
+    "pandas",
+    "click"
+]
+
+[project.urls]
+Repository = "https://github.com/me/spam.git"
+
+[project.scripts]
+run = "holunder:cli"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["holunder*"]
+
+
+[tool.setuptools.dynamic]
+version = {attr = "holunder.__version__"}
