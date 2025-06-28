@@ -83,8 +83,14 @@ def sync_gdrive(**kwargs):
         approved_ids = set(df[df["approved"]]["id"])
         n_skipped = len(docs) - len(approved_ids)
         logger.info(f"Skipped {n_skipped} docs out of {len(docs)} because they are not approved.")
-        docs = [doc for doc in docs if doc.id in approved_ids]
-    sync_local_dir(local_dir=config.local_markdown_root_folder, client=client, docs=docs)
+    else:
+        approved_ids = {doc.id for doc in docs}
+    sync_local_dir(
+        local_dir=config.local_markdown_root_folder,
+        client=client,
+        docs=docs,
+        download_only_ids=approved_ids,
+    )
 
 
 if __name__ == "__main__":
