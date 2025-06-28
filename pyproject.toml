@@ -10,7 +10,7 @@ authors = [
   {name = "Valentin François"},
 ]
 readme = "README.md"
-license = "PeaceOSL (2020)"
+license = "LicenseRef-PeaceOSL-2020"
 license-files = ["PeaceOSL_License.txt"]
 requires-python = ">= 3.10"
 dependencies = [

@@ -1,5 +1,5 @@
 requirements:
-	pip install -r requirements.txt
+	pip install -e . && pip uninstall -y holunder && rm -rf holunder.egg*
 
 
 requirements_dev:
