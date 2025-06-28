@@ -10,8 +10,8 @@ authors = [
   {name = "Valentin François"},
 ]
 readme = "README.md"
-license = "GPL-3.0-or-later"
-license-files = ["LICENSE.txt"]
+license = "PeaceOSL (2020)"
+license-files = ["PeaceOSL_License.txt"]
 requires-python = ">= 3.10"
 dependencies = [
     "google-auth",
@@ -24,10 +24,10 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/me/spam.git"
+Repository = "https://github.com/ValentinFrancois/holunder"
 
 [project.scripts]
-run = "holunder:cli"
+holunder = "holunder:cli"
 
 [tool.setuptools.packages.find]
 where = ["."]
