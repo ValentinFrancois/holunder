@@ -7,4 +7,4 @@ requirements_dev:
 
 
 format:
-	ruff format ; ruff check --fix src
+	ruff format holunder/ test/ ; ruff check --fix holunder/ test/
