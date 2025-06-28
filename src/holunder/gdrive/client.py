@@ -42,7 +42,6 @@ class GDriveClient:
             response = service.files().list(**kwargs).execute()
         files = []
         for file in response["files"]:
-            print(file)
             files.append(FileGetResponse(**file))
         if next_page_token := response.get("nextPageToken"):
             files.append(
@@ -61,7 +60,7 @@ class GDriveClient:
             f" and '{folder_id}' in parents"  # "in parents" actually means "is direct parent"
             f" and trashed=false"
         )
-        docs = []
+        docs: list[FileNode] = []
         docs_and_folders = self.list_files_all_pages(page_size=page_size, q=q)
         for file in docs_and_folders:
             if file.mimeType == GDriveMimeType.folder:

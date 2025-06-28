@@ -7,7 +7,7 @@ from pydantic_core import PydanticUndefined
 from holunder.config import Config
 from holunder.gdrive.client import GDriveClient
 from holunder.logger import logger
-from holunder.sync.local_folder import sync_local_dir
+from holunder.sync.local_folder import check_for_duplicates, sync_local_dir
 from holunder.sync.remote_sheet import sync_gsheet
 
 
@@ -77,8 +77,7 @@ def sync_gdrive(**kwargs):
     config = Config(**kwargs)
     client = _get_client(config)
     docs = client.list_google_docs()
-    for doc in docs:
-        print(doc)
+    check_for_duplicates(docs)
     if config.gdrive_management_spreadsheet:
         df = sync_gsheet(client, docs)
         approved_ids = set(df[df["approved"]]["id"])

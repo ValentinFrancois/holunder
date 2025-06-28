@@ -1,5 +1,6 @@
 import re
 import subprocess
+from collections import defaultdict
 from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from pathlib import Path
@@ -12,6 +13,23 @@ from holunder.gdrive.client import GDriveClient
 from holunder.gdrive.models import FileNode, SyncedDocs
 from holunder.logger import logger
 from holunder.path_sanitizer import default_sanitize_path
+
+
+def check_for_duplicates(
+    docs: list[FileNode], path_sanitize_func: Callable = default_sanitize_path
+) -> None:
+    duplicate_checks = defaultdict(list)
+    for doc in docs:
+        key = (*doc.parents, doc.get_local_path(sanitize_func=path_sanitize_func))
+        duplicate_checks[key].append(doc)
+    duplicates = []
+    for group in duplicate_checks.values():
+        if len(group) > 1:
+            duplicates.append(tuple(doc.id for doc in group))
+    if duplicates:
+        raise ValueError(
+            f"Duplicate file paths for following Docs were found after path sanitizing: {duplicates}"
+        )
 
 
 def _download_gdocs(
