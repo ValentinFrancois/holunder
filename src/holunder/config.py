@@ -1,43 +1,22 @@
 from pathlib import Path
 
-from pydantic import BaseModel, Field
-from typing_extensions import Self
-from yaml import CSafeLoader, load
+from pydantic import BaseModel, Field, FilePath
 
 
 class Config(BaseModel):
-    class Spreadsheet(BaseModel):
-        id: str
-        sheet: str
-
-    service_account_key_path: Path = Field(description='Path to Google Service Account Key file')
-    gdrive_root_folder_id: str = Field(
-        description='ID of the root folder containing all the GDoc files'
+    service_account_key_path: FilePath = Field(
+        description="Path to Google Service Account Key file"
     )
-    gdrive_management_spreadsheet: Spreadsheet | None = Field(
-        description='ID of the GSheet to use for pages approval'
+    gdrive_root_folder_id: str = Field(
+        description="ID of the root folder containing all the GDoc files"
+    )
+    gdrive_management_spreadsheet: str | None = Field(
+        description="ID of the GSheet to use for pages approval", default=""
     )
     ignore_images: bool = Field(
-        description='Remove images from the GDoc -> markdown conversion output', default=True
+        description="Remove images from the GDoc -> markdown conversion output", default=True
     )
-    delete_non_synced_pages: bool = Field(
-        description='If a local markdown page is no longer found in the GDrive root folder, delete it.',
-        default=False,
+    local_markdown_root_folder: Path = Field(
+        description="Local folder where GDocs will be downloaded as markdown files.",
+        default=Path("./synced/"),
     )
-
-    @classmethod
-    def from_yaml(cls, path: Path | str) -> Self:
-        with Path(path).open('r') as f:
-            parsed = load(f, CSafeLoader)
-            config = cls(**parsed)
-        if not config.service_account_key_path.is_file():
-            error = FileNotFoundError(config.service_account_key_path)
-            if config.service_account_key_path.is_absolute():
-                raise error
-            else:
-                relative = path.parent / config.service_account_key_path
-                if relative.is_file():
-                    config.service_account_key_path = relative
-                else:
-                    raise error
-        return config

@@ -3,9 +3,9 @@ import re
 from unidecode import unidecode
 
 default_char_replacements = (
-    (re.compile('[\s:;/]+'), '_'),
-    (re.compile('[^a-z0-9-._]'), ''),
-    (re.compile('[-._]+$'), ''),
+    (re.compile("[\s:;/]+"), "_"),
+    (re.compile("[^a-z0-9-._]"), ""),
+    (re.compile("[-._]+$"), ""),
 )
 
 

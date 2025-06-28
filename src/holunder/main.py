@@ -1,4 +1,8 @@
-from pathlib import Path
+import types
+
+import click
+from click import Command
+from pydantic_core import PydanticUndefined
 
 from holunder.config import Config
 from holunder.gdrive.client import GDriveClient
@@ -7,27 +11,82 @@ from holunder.sync.local_folder import sync_local_dir
 from holunder.sync.remote_sheet import sync_gsheet
 
 
-def check_config(config_path: Path | str) -> None:
+def _get_client(config: Config) -> GDriveClient:
     try:
-        config = Config.from_yaml(config_path)
+        return GDriveClient(config)
     except Exception:
-        logger.exception(f'Config file {config_path} could not be found/loaded')
+        logger.exception("Service Account credentials seem incorrect")
+        raise
 
+
+@click.group()
+def cli():
+    pass
+
+
+def add_config_params(func: Command) -> Command:
+    """Programmatically add click options matching the fields of the Config pydantic model."""
+    for field, field_info in Config.model_fields.items():
+        if isinstance(field_info.annotation, types.UnionType):
+            field_type = field_info.annotation.__args__[0]
+        else:
+            field_type = field_info.annotation
+        if field_info.default is PydanticUndefined:
+            default = None
+            required = True
+        else:
+            default = field_info.default
+            required = False
+        func.params.append(
+            click.Option(
+                ["--" + field],
+                type=field_type,
+                default=default,
+                show_default=True,
+                required=required,
+                help=field_info.description,
+            )
+        )
+    return func
+
+
+@add_config_params
+@cli.command("check_config")
+def check_config(**kwargs):
     try:
-        client = GDriveClient(config)
+        config = Config(**kwargs)
     except Exception:
-        logger.exception('Service Account credentials seem incorrect')
+        logger.error("Invalid config")
+        raise
+
+    client = _get_client(config)
 
     root = client.get_root_folder()
     logger.info(f"Configured documents root folder: '{root.name}' ({root.id}).")
 
-    sheet = client.get_management_spreadsheet()
-    logger.info(f"Configured management spreadsheet: '{sheet.name}' ({sheet.id}).")
+    if config.gdrive_management_spreadsheet:
+        sheet = client.get_management_spreadsheet()
+        logger.info(f"Configured management spreadsheet: '{sheet.name}' ({sheet.id}).")
+    else:
+        logger.info("No management spreadsheet configured.")
 
-    docs = sync_local_dir('synced', client)
-    sync_gsheet(client, docs)
+
+@add_config_params
+@cli.command("sync_gdrive")
+def sync_gdrive(**kwargs):
+    config = Config(**kwargs)
+    client = _get_client(config)
+    docs = client.list_google_docs()
+    for doc in docs:
+        print(doc)
+    if config.gdrive_management_spreadsheet:
+        df = sync_gsheet(client, docs)
+        approved_ids = set(df[df["approved"]]["id"])
+        n_skipped = len(docs) - len(approved_ids)
+        logger.info(f"Skipped {n_skipped} docs out of {len(docs)} because they are not approved.")
+        docs = [doc for doc in docs if doc.id in approved_ids]
+    sync_local_dir(local_dir=config.local_markdown_root_folder, client=client, docs=docs)
 
 
-
-if __name__ == '__main__':
-    check_config(Path(__file__).parent.parent.parent / 'local' / 'config.yaml')
+if __name__ == "__main__":
+    cli()

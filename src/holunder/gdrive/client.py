@@ -1,17 +1,16 @@
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import Resource, build
-from gsheet_pandas import DriveConnection
 
+from holunder.config import Config
 from holunder.gdrive.constants import GDriveMimeType
 from holunder.gdrive.models import FileGetResponse, FileNode
-from src.holunder.config import Config
 
 
 class GDriveClient:
     SCOPES = [
-        'https://www.googleapis.com/auth/drive.metadata.readonly',  # list files
-        'https://www.googleapis.com/auth/drive.readonly',  # read file content
-        'https://www.googleapis.com/auth/spreadsheets',  # read and write spreadsheets
+        "https://www.googleapis.com/auth/drive.metadata.readonly",  # list files
+        "https://www.googleapis.com/auth/drive.readonly",  # read file content
+        "https://www.googleapis.com/auth/spreadsheets",  # read and write spreadsheets
     ]
 
     def __init__(self, config: Config):
@@ -24,20 +23,28 @@ class GDriveClient:
         )
 
     def build_drive_service(self) -> Resource:
-        return build(serviceName='drive', version='v3', credentials=self._creds)
+        return build(serviceName="drive", version="v3", credentials=self._creds)
+
+    def build_spreadsheet_service(self) -> Resource:
+        return build(serviceName="sheets", version="v4", credentials=self._creds)
 
     def list_files_all_pages(
         self, page_size: int, q: str, page_token: str | None = None
     ) -> list[FileGetResponse]:
-        service = self.build_drive_service()
+        with self.build_drive_service() as service:
+            kwargs = dict(
+                pageSize=page_size,
+                fields="nextPageToken, files(id, name, mimeType, modifiedTime)",
+                q=q,
+            )
+            if page_token is not None:
+                kwargs["pageToken"] = page_token
+            response = service.files().list(**kwargs).execute()
         files = []
-        kwargs = dict(pageSize=page_size, fields='nextPageToken, files(id, name, mimeType)', q=q)
-        if page_token is not None:
-            kwargs['pageToken'] = page_token
-        response = service.files().list(**kwargs).execute()
-        for file in response['files']:
+        for file in response["files"]:
+            print(file)
             files.append(FileGetResponse(**file))
-        if next_page_token := response.get('nextPageToken'):
+        if next_page_token := response.get("nextPageToken"):
             files.append(
                 self.list_files_all_pages(page_size=page_size, q=q, page_token=next_page_token)
             )
@@ -52,7 +59,7 @@ class GDriveClient:
             f"(mimeType = '{GDriveMimeType.doc.value}'"
             f" or mimeType = '{GDriveMimeType.folder.value}')"
             f" and '{folder_id}' in parents"  # "in parents" actually means "is direct parent"
-            f' and trashed=false'
+            f" and trashed=false"
         )
         docs = []
         docs_and_folders = self.list_files_all_pages(page_size=page_size, q=q)
@@ -64,43 +71,67 @@ class GDriveClient:
                     )
                 )
             else:
-                file = FileNode(id=file.id, name=file.name, parents=parents)
+                file = FileNode(
+                    id=file.id, name=file.name, modifiedTime=file.modifiedTime, parents=parents
+                )
                 docs.append(file)
         return docs
 
     def get_file_info(self, file_id: str) -> FileGetResponse:
-        service = self.build_drive_service()
-        response = service.files().get(fileId=file_id, fields='id, name, mimeType').execute()
-        return FileGetResponse(**response)
+        with self.build_drive_service() as service:
+            response = service.files().get(fileId=file_id, fields="id, name, mimeType").execute()
+            return FileGetResponse(**response)
 
     def get_root_folder(self) -> FileGetResponse:
         file_id = self._config.gdrive_root_folder_id
         root = self.get_file_info(file_id)
         if root.mimeType != GDriveMimeType.folder:
             raise ValueError(
-                f'Unexpected MIME type for configured root folder ({file_id}): {root.mimeType}'
+                f"Unexpected MIME type for configured root folder ({file_id}): {root.mimeType}"
             )
         return root
 
     def get_management_spreadsheet(self) -> FileGetResponse:
-        file_id = self._config.gdrive_management_spreadsheet.id
+        file_id = self._config.gdrive_management_spreadsheet
         sheet = self.get_file_info(file_id)
         if sheet.mimeType != GDriveMimeType.sheet:
             raise ValueError(
-                f'Unexpected MIME type for configured root folder ({file_id}): {sheet.mimeType}'
+                f"Unexpected MIME type for configured root folder ({file_id}): {sheet.mimeType}"
             )
         return sheet
 
     def get_doc_markdown(self, file_id: str) -> bytes:
-        service = self.build_drive_service()
-        bytes = (
-            service.files().export(fileId=file_id, mimeType=GDriveMimeType.markdown.value).execute()
-        )
+        with self.build_drive_service() as service:
+            bytes = (
+                service.files()
+                .export(fileId=file_id, mimeType=GDriveMimeType.markdown.value)
+                .execute()
+            )
         if self._config.ignore_images:
             return bytes
         raise NotImplementedError()
 
-    def get_gsheet_pandas_client(self) -> DriveConnection:
-        return DriveConnection(
-            credentials_dir=self._config.service_account_key_path, token_dir=None
-        )
+    def download_spreadsheet(self, file_id: str, sheet: str | None = None) -> list[list]:
+        cells_range = "!A1:ZZ900000"
+        cells_range = (sheet + cells_range) if sheet is not None else cells_range
+        with self.build_spreadsheet_service() as service:
+            return (
+                service.spreadsheets()
+                .values()
+                .get(spreadsheetId=file_id, range=cells_range)
+                .execute()["values"]
+            )
+
+    def update_spreadsheet(
+        self, file_id: str, values: list[list], sheet: str | None = None
+    ) -> None:
+        cells_range = "!A1:ZZ900000"
+        cells_range = (sheet + cells_range) if sheet is not None else cells_range
+        with self.build_spreadsheet_service() as service:
+            service.spreadsheets().values().update(
+                spreadsheetId=file_id,
+                # See https://developers.google.com/workspace/sheets/api/reference/rest/v4/ValueInputOption
+                valueInputOption="USER_ENTERED",
+                range=cells_range,
+                body=dict(majorDimension="ROWS", values=values),
+            ).execute()

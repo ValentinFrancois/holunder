@@ -9,6 +9,7 @@ from holunder.gdrive.constants import GDriveMimeType
 class BaseFileInfo(BaseModel):
     id: str
     name: str
+    modifiedTime: str | None = None
 
 
 class FileGetResponse(BaseFileInfo):
@@ -21,11 +22,11 @@ class FileNode(BaseFileInfo):
     )
 
     def get_local_path(self, sanitize_func: Callable) -> Path:
-        local_path = Path('')
+        local_path = Path("")
         if self.parents:
             for parent_name in self.parents:
                 local_path = local_path / sanitize_func(parent_name)
-        local_path = local_path / (sanitize_func(self.name) + '.md')
+        local_path = local_path / (sanitize_func(self.name) + ".md")
         return local_path
 
 
