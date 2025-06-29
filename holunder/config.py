@@ -6,12 +6,10 @@ from pydantic import BaseModel, Field, FilePath, model_validator
 
 class Config(BaseModel):
     service_account_key_path: FilePath | None = Field(
-        description="Path to the Google Service Account JSON key file",
-        default=None
+        description="Path to the Google Service Account JSON key file", default=None
     )
     service_account_key: str | None = Field(
-        description="Content of the Google Service Account JSON key",
-        default=None
+        description="Content of the Google Service Account JSON key", default=None
     )
     gdrive_root_folder_id: str = Field(
         description="ID of the root folder containing all the GDoc files"
