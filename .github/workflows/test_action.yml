@@ -12,8 +12,8 @@ jobs:
       with:
         name: key.json
         json: ${{ secrets.SA_JSON_KEY }}
-    - name: My first step
-      uses: .
+    - name: holunder
+      uses: ./
       with:
         service_account_key_path: key.json
         gdrive_root_folder_id: 1TUSaFwWGfw0GZyWzYxJzjTpTYU-KD9z8
