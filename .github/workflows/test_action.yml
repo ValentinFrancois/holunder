@@ -24,4 +24,4 @@ jobs:
         gdrive_management_spreadsheet: 1f_d4E6w8dgVy0xDcm-pTUZma6CGUJhr1bLquj8H3RoM
         ignore_images: True
     - name: check result
-      run: ls -la && ls ${{ github.workspace }}/synced
+      run: ls -la && ls -la synced
