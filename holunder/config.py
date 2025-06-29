@@ -27,7 +27,7 @@ class Config(BaseModel):
 
     @model_validator(mode="after")
     def non_empty_service_account_key(self):  # better name needed ;)
-        if self.service_account_key is None and self.service_account_key_path is None:
+        if not self.service_account_key and not self.service_account_key_path:
             raise ValueError("One of [service_account_key, service_account_key_path] is required.")
         return self
 
