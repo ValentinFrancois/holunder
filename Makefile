@@ -4,7 +4,7 @@ requirements:
 
 
 requirements_dev:
-	pip install -r requirements_dev.txt
+	pip install -e .[dev] && pip uninstall -y holunder && rm -rf holunder.egg*
 
 
 lint:

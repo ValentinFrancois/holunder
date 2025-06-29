@@ -1,0 +1,32 @@
+name: 'holunder'
+description: 'Sync Google Docs in a folder to local Markdowm files'
+
+inputs:
+  service_account_key_path:
+    description: 'Path to your Service Account JSON key (it is highly recommended to store it as a repo secret)'
+    required: true
+  gdrive_root_folder_id:
+    description: 'ID of the root Google Drive folder containing all the Docs to sync.'
+    required: true
+  gdrive_management_spreadsheet:
+    description: 'ID of the GSheet to use for pages approval management.'
+    required: false
+    default: ''
+  local_markdown_root_folder:
+    description: 'Path to the local folder of Markdown files to sync with the Google Drive folder.'
+    required: true
+  ignore_images:
+    description: 'Whether to ignore images from the Google Docs or not.'
+    required: false
+    default: 'True'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - sync_gdrive
+    - --service_account_key_path=${{ inputs.service_account_key_path }}
+    - --gdrive_root_folder_id=${{ inputs.gdrive_root_folder_id }}
+    - --local_markdown_root_folder=${{ inputs.local_markdown_root_folder }}
+    - --gdrive_management_spreadsheet=${{ inputs.gdrive_management_spreadsheet }}
+    - --ignore_images=${{ inputs.ignore_images }}

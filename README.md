@@ -45,7 +45,7 @@ pip install git+https://github.com/ValentinFrancois/holunder.git
 - Create a root folder where all the pages for the website will be written. Share it with your contributors and store its ID (from the URL).
 - [Create a Google Service Account](https://console.cloud.google.com/projectselector2/iam-admin/serviceaccounts/create?walkthrough_id=iam--create-service-account) and share the previously created folder to the account as __Viewer__.
 - [Create a JSON key file](https://cloud.google.com/iam/docs/keys-create-delete) for your Service Account and download it.
-- Optional: create a Google Spreadsheet and store its ID (it will be used for page content approval tracking). Share the spreadsheet to the Service Account (as __Editor__).
+- Optional: create a Google Spreadsheet and store its ID (it will be used for page content approval tracking). Share the spreadsheet to the Service Account as __Editor__.
 
 That's it! You can now configure __holunder__ to use the above resources for automatic download & conversion of Google Docs to a local directory.
 
@@ -55,7 +55,7 @@ __NOTE__: Be careful with the service account and its key. Only store it in plac
 After 1. you should now be able to call `holunder` from the terminal.
 ```shell
 $ holunder check_config --help
-Usage: run check_config [OPTIONS]
+Usage: holunder check_config [OPTIONS]
 
 Options:
   --service_account_key_path PATH

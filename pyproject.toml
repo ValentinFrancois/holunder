@@ -29,6 +29,12 @@ Repository = "https://github.com/ValentinFrancois/holunder"
 [project.scripts]
 holunder = "holunder:cli"
 
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff>=0.12.0"
+]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["holunder*"]
