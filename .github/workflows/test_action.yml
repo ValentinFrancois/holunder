@@ -12,6 +12,9 @@ jobs:
       with:
         name: key.json
         json: ${{ secrets.SA_JSON_KEY }}
+    - name: Create dir
+      run:
+        mkdir synced
     - name: holunder
       uses: ./
       with:
