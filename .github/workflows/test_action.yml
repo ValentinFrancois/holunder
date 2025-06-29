@@ -1,0 +1,22 @@
+name: use my action
+on:
+  pull_request:
+
+jobs:
+  test_action:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Create key.json
+      uses: jsdaniell/create-json@v1.2.3
+      with:
+        name: key.json
+        json: {{ secrets.SA_JSON_KEY }}
+    - name: My first step
+      uses: action.yml
+      with:
+        service_account_key_path: key.json
+        gdrive_root_folder_id: 1TUSaFwWGfw0GZyWzYxJzjTpTYU-KD9z8
+        local_markdown_root_folder: synced
+        gdrive_management_spreadsheet: 1f_d4E6w8dgVy0xDcm-pTUZma6CGUJhr1bLquj8H3RoM
+        ignore_images: True
