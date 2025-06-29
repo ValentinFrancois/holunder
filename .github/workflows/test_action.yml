@@ -11,9 +11,9 @@ jobs:
       uses: jsdaniell/create-json@v1.2.3
       with:
         name: key.json
-        json: {{ secrets.SA_JSON_KEY }}
+        json: ${{ secrets.SA_JSON_KEY }}
     - name: My first step
-      uses: action.yml
+      uses: ./action.yml
       with:
         service_account_key_path: key.json
         gdrive_root_folder_id: 1TUSaFwWGfw0GZyWzYxJzjTpTYU-KD9z8
