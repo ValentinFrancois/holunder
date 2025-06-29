@@ -27,6 +27,6 @@ runs:
     - sync_gdrive
     - --service_account_key_path=${{ inputs.service_account_key_path }}
     - --gdrive_root_folder_id=${{ inputs.gdrive_root_folder_id }}
-    - --local_markdown_root_folder=${{ inputs.local_markdown_root_folder }}
+    - --local_markdown_root_folder=/github/workspace/${{ inputs.local_markdown_root_folder }}
     - --gdrive_management_spreadsheet=${{ inputs.gdrive_management_spreadsheet }}
     - --ignore_images=${{ inputs.ignore_images }}
