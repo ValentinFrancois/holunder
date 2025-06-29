@@ -11,8 +11,6 @@ jobs:
       contents: write
     steps:
     - uses: actions/checkout@v4
-    - run: echo "${{ secrets.SA_JSON_KEY }}"
-      shell: bash
     - name: holunder
       uses: ./
       with:
