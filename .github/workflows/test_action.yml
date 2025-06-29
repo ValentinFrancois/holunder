@@ -3,8 +3,12 @@ on:
   pull_request:
 
 jobs:
+
+  # TODO: move to composite action in action.yml, one step should call action-docker.yml
   test_action:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
     - uses: actions/checkout@v4
     - name: Create key.json
@@ -25,3 +29,8 @@ jobs:
         ignore_images: True
     - name: check result
       run: ls -la && ls -la synced
+    - name: commit
+      uses: stefanzweifel/git-auto-commit-action@v6
+      with:
+        commit_message: Add updated markdown files
+        file_pattern: synced/

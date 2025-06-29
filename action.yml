@@ -20,9 +20,10 @@ inputs:
     required: false
     default: 'True'
 
+# TODO: rename to action-docker.yml
 runs:
   using: 'docker'
-  image: 'Dockerfile'
+  image: 'action.dockerfile'
   args:
     - sync_gdrive
     - --service_account_key_path=${{ inputs.service_account_key_path }}
