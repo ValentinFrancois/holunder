@@ -56,12 +56,28 @@ def sync_gsheet(client: GDriveClient, docs: list[FileNode]) -> pd.DataFrame:
     if current_df is None:
         consolidated_df = df
     else:
-        consolidated_df = pd.concat([current_df, df]).drop_duplicates(keep="first", subset=["url"])
+        intersection = set(df.url).intersection(current_df.url)
+        consolidated_df = pd.concat(
+            [df[~df.url.isin(intersection)], current_df[current_df.url.isin(intersection)]]
+        )
+
     consolidated_df = consolidated_df.sort_values(by=["approved", "folder", "title"])
     consolidated_df["approved"] = consolidated_df["approved"].apply(
         lambda x: str(x).lower() == "true"
     )
 
-    update_spreadsheet_from_df(client, consolidated_df)
+    upload_df = consolidated_df.copy()
+    if len(upload_df) < len(current_df):
+        # Add empty rows to overwrite the rows of the remote Spreadsheet
+        empty_rows = pd.DataFrame(
+            data=[
+                ["" for _ in range(len(upload_df.columns.values))]
+                for _ in range(len(current_df) - len(upload_df))
+            ],
+            columns=list(upload_df.columns.values),
+        )
+        upload_df = pd.concat([upload_df, empty_rows])
+
+    update_spreadsheet_from_df(client, upload_df)
     consolidated_df["id"] = consolidated_df["url"].apply(lambda url: url.replace(url_prefix, ""))
     return consolidated_df

@@ -28,6 +28,3 @@ class FileNode(BaseFileInfo):
                 local_path = local_path / sanitize_func(parent_name)
         local_path = local_path / (sanitize_func(self.name) + ".md")
         return local_path
-
-
-SyncedDocs = list[tuple[FileNode, Path]]

@@ -44,7 +44,7 @@ class GDriveClient:
         for file in response["files"]:
             files.append(FileGetResponse(**file))
         if next_page_token := response.get("nextPageToken"):
-            files.append(
+            files.extend(
                 self.list_files_all_pages(page_size=page_size, q=q, page_token=next_page_token)
             )
         return files
