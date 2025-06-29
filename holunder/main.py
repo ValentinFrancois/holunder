@@ -98,4 +98,6 @@ def cli_sync_gdrive(**kwargs):
 
 
 if __name__ == "__main__":
+    import sys
+    print(sys.argv)
     cli()
