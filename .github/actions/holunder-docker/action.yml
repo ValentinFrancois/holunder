@@ -27,8 +27,7 @@ inputs:
 
 runs:
   using: 'docker'
-  image: 'Dockerfile'
-  context: ../../..
+  image: '../../../Dockerfile'
   args:
     - sync_gdrive
     - --service_account_key_path=${{ inputs.service_account_key_path }}
