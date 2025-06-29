@@ -32,6 +32,7 @@ pip install git+https://github.com/ValentinFrancois/holunder.git
 
 ### Requirements
 - `python >= 3.10`
+- `rsync`
 - packages:
   - `google-auth`
   - `google-api-python-client`
