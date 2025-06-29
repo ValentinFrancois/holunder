@@ -23,6 +23,5 @@ runs:
 
     - name: autocommit
       uses: stefanzweifel/git-auto-commit-action@v6
-      if: ${{ config.autocommit }} != '{}'
       with:
         ${{ toJSON(inputs) }}
