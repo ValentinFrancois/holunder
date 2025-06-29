@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, model_validator
 
 
 class Config(BaseModel):
-    service_account_key_path: Path | None = Field(
+    service_account_key_path: str | None = Field(
         description="Path to the Google Service Account JSON key file", default=None
     )
     service_account_key: str | None = Field(
@@ -33,7 +33,7 @@ class Config(BaseModel):
 
     @property
     def service_account_info(self) -> dict[str, str]:
-        if self.service_account_key is not None:
+        if self.service_account_key:
             content_str = self.service_account_key
         else:
             with Path(self.service_account_key_path).open("r") as f:
