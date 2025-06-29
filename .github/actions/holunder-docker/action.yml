@@ -31,7 +31,7 @@ runs:
   args:
     - sync_gdrive
     - --service_account_key_path=${{ inputs.service_account_key_path }}
-    - --service_account_key=${{ inputs.service_account_key }}
+    - --service_account_key='${{ inputs.service_account_key }}'
     - --gdrive_root_folder_id=${{ inputs.gdrive_root_folder_id }}
     - --local_markdown_root_folder=${{ inputs.local_markdown_root_folder }}
     - --gdrive_management_spreadsheet=${{ inputs.gdrive_management_spreadsheet }}
