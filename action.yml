@@ -1,17 +1,6 @@
 name: 'holunder'
 description: 'Sync Google Docs in a folder to local Markdowm files and commit them automatically'
 
-inputs:
-  holunder:
-    description: 'Config inputs for holunder'
-    type: string
-    required: true
-  autocommit:
-    description: 'Config inputs for stefanzweifel/git-auto-commit-action@v6'
-    type: string
-    required: false
-    default: '{}'
-
 runs:
   using: "composite"
   steps:
@@ -21,18 +10,18 @@ runs:
 
     - name: Create dir
       shell:
-        mkdir -p ${{ fromJSON(config.holunder).local_markdown_root_folder }}
+        mkdir -p ${{ inputs.local_markdown_root_folder }}
 
     - name: holunder
       uses: ./.github/actions/holunder-docker.yml
       with:
-        ${{ config.holunder }}
+        ${{ toJSON(inputs) }}
 
     - name: check result
-      run: ls -la && ls -la ${{ fromJSON(config.holunder).local_markdown_root_folder }}
+      run: ls -la && ls -la ${{ inputs.local_markdown_root_folder }}
 
     - name: autocommit
       uses: stefanzweifel/git-auto-commit-action@v6
       if: ${{ config.autocommit }} != '{}'
       with:
-        ${{ config.holunder }}
+        ${{ toJSON(inputs) }}
