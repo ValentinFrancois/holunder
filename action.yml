@@ -9,7 +9,8 @@ runs:
         ref: ${{ github.head_ref }}
 
     - name: Create dir
-      shell: mkdir -p ${{ inputs.local_markdown_root_folder }}
+      shell: bash
+      run: mkdir -p ${{ inputs.local_markdown_root_folder }}
 
     - name: holunder
       uses: ./.github/actions/holunder-docker
@@ -17,7 +18,8 @@ runs:
         ${{ toJSON(inputs) }}
 
     - name: check result
-      shell: ls -la && ls -la ${{ inputs.local_markdown_root_folder }}
+      shell: bash
+      run: ls -la && ls -la ${{ inputs.local_markdown_root_folder }}
 
     - name: autocommit
       uses: stefanzweifel/git-auto-commit-action@v6
