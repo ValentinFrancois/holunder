@@ -36,4 +36,3 @@ runs:
       if: ${{ config.autocommit }} != '{}'
       with:
         ${{ config.holunder }}
-        file_pattern: ${{ fromJSON(config.holunder).local_markdown_root_folder }}/

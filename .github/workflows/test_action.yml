@@ -21,3 +21,4 @@ jobs:
           ignore_images: True
         autocommit:
           commit_message: Add updated markdown files
+          file_pattern: synced/
