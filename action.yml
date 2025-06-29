@@ -13,7 +13,7 @@ runs:
         mkdir -p ${{ inputs.local_markdown_root_folder }}
 
     - name: holunder
-      uses: ./.github/actions/holunder-docker.yml
+      uses: ./.github/actions/holunder-docker
       with:
         ${{ toJSON(inputs) }}
 
