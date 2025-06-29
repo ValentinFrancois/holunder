@@ -18,8 +18,8 @@ class GDriveClient:
         self._creds = self.read_credentials()
 
     def read_credentials(self) -> Credentials:
-        return Credentials.from_service_account_file(
-            str(self._config.service_account_key_path), scopes=self.SCOPES
+        return Credentials.from_service_account_info(
+            str(self._config.service_account_info), scopes=self.SCOPES
         )
 
     def build_drive_service(self) -> Resource:

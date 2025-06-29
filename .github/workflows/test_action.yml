@@ -10,29 +10,14 @@ jobs:
     permissions:
       contents: write
     steps:
-    - uses: actions/checkout@v4
-      with:
-        ref: ${{ github.head_ref }}
-    - name: Create key.json
-      uses: jsdaniell/create-json@v1.2.3
-      with:
-        name: key.json
-        json: ${{ secrets.SA_JSON_KEY }}
-    - name: Create dir
-      run:
-        mkdir synced
     - name: holunder
       uses: ./
       with:
-        service_account_key_path: key.json
-        gdrive_root_folder_id: 1TUSaFwWGfw0GZyWzYxJzjTpTYU-KD9z8
-        local_markdown_root_folder: synced
-        gdrive_management_spreadsheet: 1f_d4E6w8dgVy0xDcm-pTUZma6CGUJhr1bLquj8H3RoM
-        ignore_images: True
-    - name: check result
-      run: ls -la && ls -la synced
-    - name: commit
-      uses: stefanzweifel/git-auto-commit-action@v6
-      with:
-        commit_message: Add updated markdown files
-        file_pattern: synced/
+        holunder:
+          service_account_key: ${{ secrets.SA_JSON_KEY }}
+          gdrive_root_folder_id: 1TUSaFwWGfw0GZyWzYxJzjTpTYU-KD9z8
+          local_markdown_root_folder: synced
+          gdrive_management_spreadsheet: 1f_d4E6w8dgVy0xDcm-pTUZma6CGUJhr1bLquj8H3RoM
+          ignore_images: True
+        autocommit:
+          commit_message: Add updated markdown files
