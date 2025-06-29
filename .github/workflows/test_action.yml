@@ -12,6 +12,8 @@ jobs:
       with:
         name: key.json
         json: ${{ secrets.SA_JSON_KEY }}
+    - name: ls
+      run: ls -la
     - name: My first step
       uses: ./action.yml
       with:
