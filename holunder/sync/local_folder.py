@@ -1,17 +1,18 @@
-import json
 import re
-import subprocess
+import sys
 from collections import defaultdict
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
 from tqdm import tqdm
 
 from holunder.gdrive.client import GDriveClient
 from holunder.gdrive.models import FileNode
+from holunder.hugo.header import create_header
+from holunder.hugo.md_parser import list_hugo_md_files
+from holunder.hugo.md_writer import write_hugo_md_file
 from holunder.logger import logger
 from holunder.path_sanitizer import default_sanitize_path
 
@@ -33,25 +34,20 @@ def check_for_duplicates(
         )
 
 
-def _download_gdocs(
-    local_dir: Path,
+def download_gdocs(
     client: GDriveClient,
     docs: list[FileNode] | None = None,
-    path_sanitize_func: Callable = default_sanitize_path,
     n_threads: int = 4,
-) -> None:
+) -> Generator[bytes, None, None]:
     if not docs:
         docs = client.list_google_docs()
     pool = ThreadPoolExecutor(max_workers=n_threads)
     downloads: list[Future] = [pool.submit(lambda: client.get_doc_markdown(doc.id)) for doc in docs]
-
-    for doc, download in tqdm(zip(docs, downloads)):
-        local_path = local_dir / doc.get_local_path(sanitize_func=path_sanitize_func)
-        local_path.parent.mkdir(parents=True, exist_ok=True)
-        with local_path.open("wb") as f:
+    with tqdm(downloads, file=sys.stdout, desc="Downloading & converting Google Docs...") as it:
+        for download in it:
             markdown = download.result()
             markdown = _replace_gdoc_links(markdown, docs)
-            f.write(markdown)
+            yield markdown
 
 
 markdown_link_regex = re.compile(rb"\[[^]\[()]+]\(([^]\[()]+)\)")
@@ -70,79 +66,79 @@ def _replace_gdoc_links(
     return markdown
 
 
-def _build_checksums_index(
-    docs: list[FileNode],
-    download_only_ids: set[str] | None = None,
-    path_sanitize_func: Callable = default_sanitize_path,
-) -> dict[str, tuple[Path, str]]:
-    res = {}
-    for doc in docs:
-        if download_only_ids is not None and doc.id not in download_only_ids:
-            continue
-        path = doc.get_local_path(sanitize_func=path_sanitize_func)
-        # Note: Google Drive does not compute checksums for Docs, Sheets etc.
-        # For now, we use the last modification time as a 'checksum'. This logic might change later.
-        res[doc.id] = (str(path), doc.modifiedTime)
-    return res
-
-
-def _get_index_path(local_dir: Path) -> Path:
-    return Path(local_dir) / "checksums.json"
-
-
-def _load_checksums_index(local_dir: Path) -> dict[str, str]:
-    index_path = _get_index_path(local_dir)
-    if not index_path.is_file():
-        return {}
-    with index_path.open("r") as f:
-        content = json.load(f)
-    return content
-
-
 def sync_local_dir(
     local_dir: Path,
     client: GDriveClient,
     docs: list[FileNode] | None = None,
-    download_only_ids: set[str] | None = None,
+    approved_ids: set[str] | None = None,
     path_sanitize_func: Callable = default_sanitize_path,
-) -> list[FileNode]:
+) -> None:
+    if approved_ids is None:
+        approved_ids = set()
     local_dir = Path(local_dir)
-    new_index = _build_checksums_index(
-        docs=docs, download_only_ids=download_only_ids, path_sanitize_func=path_sanitize_func
-    )
-    old_index = _load_checksums_index(local_dir)
+    local_hugo_pages = list_hugo_md_files(local_dir) if local_dir.is_dir() else {}
 
-    paths_to_delete = set(old_index.keys()).difference(path for path, _ in new_index.values())
-    if paths_to_delete:
-        logger.info(
-            f"Deleting {len(paths_to_delete)} local Markdown files no longer present/approved in Google Drive: {paths_to_delete}"
+    remote_hugo_pages = {
+        doc.get_local_path(sanitize_func=path_sanitize_func): (
+            doc,
+            create_header(doc, approved=doc.id in approved_ids),
         )
-        for relative_path in paths_to_delete:
-            path = local_dir / relative_path
-            if path.is_file():
-                path.unlink()
-
-    doc_ids_to_update = {
-        doc_id
-        for doc_id, (path, checksum) in new_index.items()
-        if old_index.get(path) != checksum or not (local_dir / path).is_file()
+        for doc in docs
     }
-    logger.info(
-        f"Skipped {len(new_index) - len(doc_ids_to_update)} docs out of {len(new_index)} because local Markdown files are identical."
+
+    marked_to_draft: set[Path] = set()
+    marked_to_approved: set[Path] = set()
+    created: set[Path] = set()
+    content_updated: set[Path] = set()
+
+    for path, (header, markdown) in local_hugo_pages.items():
+        if path not in remote_hugo_pages and not header.draft:
+            header.draft = True
+            marked_to_draft.add(path)
+            write_hugo_md_file(header, markdown, local_dir / path)
+
+    for path, (doc, header) in remote_hugo_pages.items():
+        if path not in local_hugo_pages:
+            created.add(path)
+        else:
+            local_header, local_markdown = local_hugo_pages[path]
+            if local_header.date != header.date:
+                content_updated.add(path)
+                local_header.date = header.date
+            if local_header.draft != header.draft:
+                local_header.draft = header.draft
+                if header.draft:
+                    marked_to_draft.add(path)
+                else:
+                    marked_to_approved.add(path)
+
+    total_updates = marked_to_draft.union(marked_to_approved, created, content_updated)
+    paths_to_download = list(created.union(content_updated))
+    paths_to_update_header = total_updates.intersection(remote_hugo_pages.keys()).difference(
+        paths_to_download
     )
-    if not doc_ids_to_update:
-        return []
-    new_or_updated_docs = [doc for doc in docs if doc.id in doc_ids_to_update]
-    with TemporaryDirectory() as temp_dir:
-        _download_gdocs(
-            local_dir=Path(temp_dir),
-            client=client,
-            docs=new_or_updated_docs,
-            path_sanitize_func=path_sanitize_func,
-        )
-        cmd = ["rsync", "--recursive", "--checksum", "--include=*.md", "--include=*.checksum"]
-        cmd.extend([temp_dir + "/", str(local_dir)])
-        subprocess.run(cmd, check=True)
-    with _get_index_path(local_dir).open("w") as f:
-        json.dump({path: checksum for path, checksum in new_index.values()}, f, indent=2)
-    return new_or_updated_docs
+    docs_to_download = [remote_hugo_pages[path][0] for path in paths_to_download]
+    downloads = download_gdocs(client, docs_to_download)
+
+    if docs_to_download:
+        for path, downloaded_bytes in zip(paths_to_download, downloads):
+            header = (
+                local_hugo_pages[path][0] if path in content_updated else remote_hugo_pages[path][1]
+            )
+            write_hugo_md_file(header, downloaded_bytes, local_dir / path)
+        next(downloads, "ignore")
+
+    for path in paths_to_update_header:
+        header, markdown = local_hugo_pages[path]
+        write_hugo_md_file(header, markdown, local_dir / path)
+
+    def paths_str(paths: set[Path]) -> list[str]:
+        return sorted(str(p) for p in paths)
+
+    logger.info(
+        f"Total files updated: {len(total_updates)}\n"
+        f"Marked to draft (not found remotely/not approved in the Spreadsheet): {len(marked_to_draft)}\n{paths_str(marked_to_draft)}\n"
+        f"Marked to approved: {len(marked_to_approved)}\n{paths_str(marked_to_approved)}\n"
+        f"Created: {len(created)}\n{paths_str(created)}\n"
+        f"Markdown content updated: {len(content_updated)}\n{paths_str(content_updated)}"
+    )

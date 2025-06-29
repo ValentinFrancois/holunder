@@ -1,5 +1,6 @@
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import Resource, build
+from tqdm import tqdm
 
 from holunder.config import Config
 from holunder.gdrive.constants import GDriveMimeType
@@ -50,10 +51,16 @@ class GDriveClient:
         return files
 
     def list_google_docs(
-        self, page_size: int = 100, folder_id: str | None = None, parents: tuple[str] = tuple()
+        self,
+        page_size: int = 100,
+        folder_id: str | None = None,
+        parents: tuple[str] = tuple(),
+        pbar: tqdm | None = None,
     ) -> list[FileNode]:
         if folder_id is None:
             folder_id = self._config.gdrive_root_folder_id
+        if pbar is None:
+            pbar = tqdm(dynamic_ncols=True, total=0, desc="Recursively fetching Google Docs...")
         q = (
             f"(mimeType = '{GDriveMimeType.doc.value}'"
             f" or mimeType = '{GDriveMimeType.folder.value}')"
@@ -62,17 +69,30 @@ class GDriveClient:
         )
         docs: list[FileNode] = []
         docs_and_folders = self.list_files_all_pages(page_size=page_size, q=q)
+        progress = pbar.n
+        pbar.reset(pbar.total + len(docs_and_folders))
+        pbar.update(progress)
+        pbar.refresh()
         for file in docs_and_folders:
             if file.mimeType == GDriveMimeType.folder:
                 docs.extend(
                     self.list_google_docs(
-                        page_size=page_size, folder_id=file.id, parents=(*parents, file.name)
+                        page_size=page_size,
+                        folder_id=file.id,
+                        parents=(*parents, file.name),
+                        pbar=pbar,
                     )
                 )
+                progress = pbar.n
+                pbar.reset(pbar.total - 1)
+                pbar.update(progress)
+                pbar.refresh()
             else:
                 file = FileNode(
                     id=file.id, name=file.name, modifiedTime=file.modifiedTime, parents=parents
                 )
+                pbar.update(1)
+                pbar.refresh()
                 docs.append(file)
         return docs
 

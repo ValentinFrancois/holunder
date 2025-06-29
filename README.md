@@ -32,7 +32,6 @@ pip install git+https://github.com/ValentinFrancois/holunder.git
 
 ### Requirements
 - `python >= 3.10`
-- `rsync`
 - packages:
   - `google-auth`
   - `google-api-python-client`
@@ -41,6 +40,7 @@ pip install git+https://github.com/ValentinFrancois/holunder.git
   - `tqdm`
   - `pandas`
   - `click`
+  - `PyYAML`
 
 ## 2. Set up the project Google Drive
 - Create a root folder where all the pages for the website will be written. Share it with your contributors and store its ID (from the URL).

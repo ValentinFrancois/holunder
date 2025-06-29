@@ -20,7 +20,8 @@ dependencies = [
     "Unidecode",
     "tqdm",
     "pandas",
-    "click"
+    "click",
+    "PyYAML"
 ]
 
 [project.urls]

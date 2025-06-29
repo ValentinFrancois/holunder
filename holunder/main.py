@@ -78,15 +78,13 @@ def sync_gdrive(config: Config) -> None:
     if config.gdrive_management_spreadsheet:
         df = sync_gsheet(client, docs)
         approved_ids = set(df[df["approved"]]["id"])
-        n_skipped = len(docs) - len(approved_ids)
-        logger.info(f"Skipped {n_skipped} docs out of {len(docs)} because they are not approved.")
     else:
         approved_ids = {doc.id for doc in docs}
     sync_local_dir(
         local_dir=config.local_markdown_root_folder,
         client=client,
         docs=docs,
-        download_only_ids=approved_ids,
+        approved_ids=approved_ids,
     )
 
 
