@@ -3,8 +3,6 @@ on:
   pull_request:
 
 jobs:
-
-  # TODO: move to composite action in action.yml, one step should call action-docker.yml
   test_action:
     runs-on: ubuntu-latest
     permissions:
@@ -18,6 +16,6 @@ jobs:
         gdrive_root_folder_id: 1TUSaFwWGfw0GZyWzYxJzjTpTYU-KD9z8
         local_markdown_root_folder: synced
         gdrive_management_spreadsheet: 1f_d4E6w8dgVy0xDcm-pTUZma6CGUJhr1bLquj8H3RoM
-        ignore_images: True
-        commit_message: Add updated markdown files
+        ignore_images: False
+        commit_message: Commit updated markdown files
         file_pattern: synced/
