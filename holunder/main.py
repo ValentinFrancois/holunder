@@ -93,11 +93,12 @@ def sync_gdrive(config: Config) -> None:
 @add_config_params
 @cli.command("sync_gdrive")
 def cli_sync_gdrive(**kwargs):
+    print("kwargs", kwargs)
     config = Config(**kwargs)
     sync_gdrive(config)
 
 
 if __name__ == "__main__":
     import sys
-    print(sys.argv)
+    print("sys.argv", sys.argv)
     cli()

@@ -1,21 +1,21 @@
 import json
 from pathlib import Path
 
-from pydantic import BaseModel, Field, FilePath, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 
 class Config(BaseModel):
-    service_account_key_path: FilePath | None = Field(
-        description="Path to the Google Service Account JSON key file", default=""
+    service_account_key_path: Path | None = Field(
+        description="Path to the Google Service Account JSON key file", default=None
     )
     service_account_key: str | None = Field(
-        description="Content of the Google Service Account JSON key", default=""
+        description="Content of the Google Service Account JSON key", default=None
     )
     gdrive_root_folder_id: str = Field(
         description="ID of the root folder containing all the GDoc files"
     )
     gdrive_management_spreadsheet: str | None = Field(
-        description="ID of the GSheet to use for pages approval", default=""
+        description="ID of the GSheet to use for pages approval", default=None
     )
     ignore_images: bool = Field(
         description="Remove images from the GDoc -> markdown conversion output", default=True
