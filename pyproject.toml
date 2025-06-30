@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "holunder"
+dynamic = ["version"]
+authors = [
+  {name = "Valentin François"},
+]
+readme = "README.md"
+license = "LicenseRef-PeaceOSL-2020"
+license-files = ["PeaceOSL_License.txt"]
+requires-python = ">= 3.10"
+dependencies = [
+    "google-auth",
+    "google-api-python-client",
+    "pydantic",
+    "Unidecode",
+    "tqdm",
+    "pandas",
+    "click",
+    "PyYAML"
+]
+
+[project.urls]
+Repository = "https://github.com/ValentinFrancois/holunder"
+
+[project.scripts]
+holunder = "holunder:cli"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff>=0.12.0"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["holunder*"]
+
+
+[tool.setuptools.dynamic]
+version = {attr = "holunder.__version__"}
