@@ -1,4 +1,6 @@
-![Holunder logo](logo.png)
+![Holunder logo](logo.png) 
+
+`v0.0.1`
 
 Easy content management framework for [Hugo](https://github.com/gohugoio/hugo) based on Google Drive.
 
